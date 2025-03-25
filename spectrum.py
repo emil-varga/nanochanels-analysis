@@ -55,6 +55,11 @@ def double_lorenz(f, f1, f2, A1, A2, w1, w2, phi1, phi2, b):
     l2 = A2*np.exp(1j*phi2)*f2*w2/(f**2 - f2**2 - 1j*f*w2)
     return l1 + l2 + b
 
+def double_lorenz_split(f, f1, f2, A1, A2, w1, w2, phi1, phi2, b):
+    l1 = A1*np.exp(1j*phi1)*f1*w1/(f**2 - f1**2 - 1j*f*w1)
+    l2 = A2*np.exp(1j*phi2)*f2*w2/(f**2 - f2**2 - 1j*f*w2)
+    return l1, l2
+
 def fit_img_slices(f, x, y):
     model = lmfit.Model(double_lorenz, independent_vars=['f'])
     p0 = model.make_params(f1=1066, f2=1092, w1=10, w2=10,
@@ -64,15 +69,24 @@ def fit_img_slices(f, x, y):
     f2s = []
     for k in tqdm(range(x.shape[0])):
         try:
-            # fig, ax = plt.subplots()
-            # ax.plot(f, x[k, :])
-            # ax.plot(f, y[k, :])
             fit = model.fit(f=f, data=x[k,:] + 1j*y[k,:], params=p0)
-            # fit.plot()
+            if k == 450:
+                fit.plot()
+                fig, ax = plt.subplots(2, 1, sharex=True)
+                ax[0].plot(f, x[k, :], 'o', ms=3)
+                ax[1].plot(f, y[k, :], 'o', ms=3)
+                print(fit.best_values)
+                l1, l2 = double_lorenz_split(f, **fit.best_values)
+                ax[0].plot(f, l1.real, '--', color='g')
+                ax[0].plot(f, l2.real, '--', color='r')
+                ax[1].plot(f, l1.imag, '--', color='g')
+                ax[1].plot(f, l2.imag, '--', color='r')
+                ax[0].plot(f, fit.best_fit.real, '-')
+                ax[1].plot(f, fit.best_fit.imag, '-')
+            # ax.plot(f, fit.best_fit.imag, '--', color='r')
             # ax.plot(f, fit.init_fit.real, '--', color='k')
             # ax.plot(f, fit.init_fit.imag, '--', color='r')
-            # ax.plot(f, fit.best_fit.real, '--', color='k')
-            # ax.plot(f, fit.best_fit.imag, '--', color='r')
+            
             # print(fit.fit_report())
             # break
             p0 = fit.params
@@ -91,8 +105,8 @@ data_dir_xtalk = os.path.join(data_path, 'spectra_basin2_towardsTc_demod_xtalk_6
 
 fig, ax = plt.subplots(1, 2, sharex=True, sharey=True)
 
-x, y, f, T, img = process_dir(data_dir_onebasin, figax=(fig, ax[0]), NT=200)
 x, y, f, T, img = process_dir(data_dir_xtalk, figax=(fig, ax[1]))
+_ = process_dir(data_dir_onebasin, figax=(fig, ax[0]), NT=200)
 
 f1s, f2s = fit_img_slices(f, x, y)
 
@@ -126,15 +140,18 @@ fig.supylabel('temperature (K)')
 ff.tight_layout()
 # fig.tight_layout()
 
-ff.savefig('frequencies.pdf')
-fig.savefig('spectrum.pdf')
-
 fig2, ax2 = plt.subplots()
 ax2.plot(T, rho_s_b - rho_s_c)
 ax2.set_xlabel("$T$ (K)")
 ax2.set_ylabel(r"$\rho_s^b - \rho_s^c$ (a.u.)")
 ax2.axhline(0, color='r')
 ax2.set_ylim(-0.025, 0.025)
+
+ff.savefig('frequencies.pdf')
+fig.savefig('spectrum.pdf')
 fig2.savefig("rho_diff.pdf")
+ff.savefig('frequencies.png')
+fig.savefig('spectrum.png')
+fig2.savefig("rho_diff.png")
 
 plt.show()
