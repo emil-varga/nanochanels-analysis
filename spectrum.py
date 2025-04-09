@@ -60,17 +60,19 @@ def double_lorenz_split(f, f1, f2, A1, A2, w1, w2, phi1, phi2, b):
     l2 = A2*np.exp(1j*phi2)*f2*w2/(f**2 - f2**2 - 1j*f*w2)
     return l1, l2
 
-def fit_img_slices(f, x, y):
+def fit_img_slices(f, x, y, phi10=np.pi/2, phi20=-np.pi/2):
     model = lmfit.Model(double_lorenz, independent_vars=['f'])
     p0 = model.make_params(f1=1066, f2=1092, w1=10, w2=10,
-                           phi1=np.pi/2, phi2=-np.pi/2, A1=10, A2=10,
+                           phi1=phi10, phi2=phi20, A1=10, A2=10,
                            b=0)
     f1s = []
     f2s = []
     for k in tqdm(range(x.shape[0])):
         try:
             fit = model.fit(f=f, data=x[k,:] + 1j*y[k,:], params=p0)
-            if k == 450:
+            if k == 0:
+                raise ValueError
+            if k == 10:
                 fit.plot()
                 fig, ax = plt.subplots(2, 1, sharex=True)
                 ax[0].plot(f, x[k, :], 'o', ms=3)
@@ -106,12 +108,16 @@ data_dir_xtalk = os.path.join(data_path, 'spectra_basin2_towardsTc_demod_xtalk_6
 fig, ax = plt.subplots(1, 2, sharex=True, sharey=True)
 
 x, y, f, T, img = process_dir(data_dir_xtalk, figax=(fig, ax[1]))
-_ = process_dir(data_dir_onebasin, figax=(fig, ax[0]), NT=200)
-
 f1s, f2s = fit_img_slices(f, x, y)
+
+x1, y1, f1, T1, img1 = process_dir(data_dir_onebasin, figax=(fig, ax[0]), NT=200)
+f11s, f21s = fit_img_slices(f1, x1, y1, -np.pi/2, -np.pi/2)
 
 ax[1].plot(f1s, T, '--', color='tab:orange')
 ax[1].plot(f2s, T, '--', color='tab:green')
+
+ax[0].plot(f11s, T1, '--', color='tab:orange')
+ax[0].plot(f21s, T1, '--', color='tab:green')
 
 ff, aa = plt.subplots(2, 1, sharex=True)
 aa[0].plot(T, f1s, label='$f_1$')
