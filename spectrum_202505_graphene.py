@@ -1,3 +1,6 @@
+import matplotlib as mpl
+mpl.use('qtagg')
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
@@ -230,16 +233,24 @@ fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
 
 NT = 300
 
-X_Dx, Y_Dx, f, T, img = process_dir(data_dir, figax=(fig, ax[0,0]), what='onebasin-x', NT=NT)
-X_Dy, Y_Dy, f, T, img = process_dir(data_dir, figax=(fig, ax[1,0]), what='onebasin-y', NT=NT)
-X_Cx, Y_Cx, f, T, img = process_dir(data_dir, figax=(fig, ax[0,1]), what='xtalk-x', NT=NT)
-X_Cy, Y_Cy, f, T, img = process_dir(data_dir, figax=(fig, ax[1,1]), what='xtalk-y', NT=NT)
+X_Dx, Y_Dx, f, T, img = process_dir(data_dir, figax=(fig, ax[0,0]), 
+                                    what='onebasin-x', NT=NT)
+X_Dy, Y_Dy, f, T, img = process_dir(data_dir, figax=(fig, ax[1,0]),
+                                    what='onebasin-y', NT=NT)
+X_Cx, Y_Cx, f, T, img = process_dir(data_dir, figax=(fig, ax[0,1]),
+                                    what='xtalk-x', NT=NT)
+X_Cy, Y_Cy, f, T, img = process_dir(data_dir, figax=(fig, ax[1,1]),
+                                    what='xtalk-y', NT=NT)
 
-Dx = X_Dx + 1j*Y_Dx
-Dy = X_Dy + 1j*Y_Dy
-Cx = X_Cx + 1j*Y_Cx
-Cy = X_Cy + 1j*Y_Cy
+fig, ax = plt.subplots(1, 2, sharex=True, sharey=True)
+process_dir(data_dir, figax=(fig, ax[0]), what='onebasin-y', NT=NT)
+process_dir(data_dir, figax=(fig, ax[1]), what='xtalk-x', NT=NT)
 
-fit_img_slices_common(f, Dx, Dy, Cx, Cy)
+# Dx = X_Dx + 1j*Y_Dx
+# Dy = X_Dy + 1j*Y_Dy
+# Cx = X_Cx + 1j*Y_Cx
+# Cy = X_Cy + 1j*Y_Cy
+
+# fit_img_slices_common(f, Dx, Dy, Cx, Cy)
 
 plt.show()
